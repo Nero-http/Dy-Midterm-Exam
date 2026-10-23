@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#120907">
+  <meta name="description" content="CyberHell — Underground PC Lab. Custom gaming PCs, hardware, upgrades and repair.">
+  <title>CyberHell // Underground PC Lab</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+
+  <style type="text/tailwindcss">
+    @custom-variant dark (&:where(.dark, .dark *));
+
+    /* 60-30-10 palette: paper/ink 60%, tint/panel 30%, accent 10% */
+    @theme {
+      --color-paper: #FFF4EA;
+      --color-ink: #100604;
+      --color-tint: #FFE0CC;
+      --color-panel: #20100D;
+      --color-accent: #FF541E;
+      --color-accent-ink: #B33000;
+      --color-muted: #6B4F44;
+      --color-mist: #E8CFC3;
+      --font-display: Impact, "Arial Black", sans-serif;
+    }
+
+    @layer base {
+      html { @apply scroll-smooth; }
+      body { @apply bg-paper font-mono text-ink dark:bg-ink dark:text-paper; }
+      ::selection { @apply bg-accent text-ink; }
+      a, button, input, textarea {
+        @apply focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent;
+      }
+    }
+
+    @layer components {
+      .brutal-card {
+        @apply border-2 border-ink bg-tint p-6 shadow-[6px_6px_0_var(--color-ink)]
+          transition-shadow duration-300 hover:shadow-[8px_8px_0_var(--color-accent)]
+          dark:border-paper dark:bg-panel dark:shadow-[6px_6px_0_var(--color-accent)];
+      }
+      .brutal-btn {
+        @apply inline-flex items-center justify-center gap-2 border-2 border-ink bg-accent px-5 py-3
+          text-xs font-black uppercase text-ink shadow-[4px_4px_0_var(--color-ink)]
+          transition-[background-color,box-shadow] duration-200 hover:bg-mist hover:shadow-none
+          dark:border-paper dark:shadow-[4px_4px_0_var(--color-paper)];
+      }
+      .brutal-btn-ghost {
+        @apply inline-flex items-center justify-center gap-2 border-2 border-ink px-5 py-3
+          text-xs font-black uppercase shadow-[4px_4px_0_var(--color-ink)]
+          transition-[background-color,color,box-shadow] duration-200 hover:bg-accent hover:text-ink hover:shadow-none
+          dark:border-paper dark:shadow-[4px_4px_0_var(--color-accent)];
+      }
+      .brutal-field {
+        @apply w-full border-2 border-ink bg-paper px-4 py-3 text-sm font-bold text-ink
+          shadow-[4px_4px_0_var(--color-ink)] placeholder:text-muted
+          dark:border-paper dark:bg-ink dark:text-paper dark:placeholder:text-mist dark:shadow-[4px_4px_0_var(--color-accent)];
+      }
+      .chip {
+        @apply cursor-pointer border-2 border-ink px-3 py-2 text-[10px] font-black uppercase
+          transition-colors hover:bg-accent hover:text-ink
+          aria-pressed:bg-accent aria-pressed:text-ink dark:border-paper;
+      }
+      .nav-link { @apply transition-colors hover:text-accent-ink dark:hover:text-accent; }
+      .section-label { @apply mb-3 text-[10px] font-black uppercase tracking-[0.3em] text-muted dark:text-mist; }
+      .section-title {
+        @apply mb-8 font-display text-6xl uppercase leading-[0.9] tracking-tight sm:text-7xl lg:text-8xl;
+      }
+      .body-copy { @apply text-xs font-bold leading-6 text-muted dark:text-mist; }
+      .accent-text { @apply text-accent-ink dark:text-accent; }
+    }
+
+    .dark .neon-text { text-shadow: 0 0 12px rgb(255 84 30 / 45%), 0 0 35px rgb(255 84 30 / 20%); }
+
+    @keyframes pulseGlow { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+    @keyframes scanline { from { transform: translateY(-100%); } to { transform: translateY(400%); } }
+    .glow-dot { animation: pulseGlow 2s ease-in-out infinite; }
+    .terminal-scan { animation: scanline 6s linear infinite; }
+
+    .hero-grid {
+      background-image:
+        linear-gradient(rgb(255 84 30 / 9%) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(255 84 30 / 9%) 1px, transparent 1px);
+      background-size: 42px 42px;
+      mask-image: linear-gradient(to bottom, black, transparent 95%);
+    }
+
+    .hero-line { transition: color 0.25s ease, text-shadow 0.25s ease; }
+    @media (hover: hover) and (pointer: fine) {
+      .dark .hero-line:hover { color: #ff4d2e; text-shadow: 2px 0 #00f5ff, -2px 0 #ff1744; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body class="overflow-x-hidden">
+
+  <div class="pointer-events-none fixed inset-0 -z-10 hero-grid" aria-hidden="true"></div>
+  <div id="scrollProgress" class="fixed left-0 top-0 z-[100] h-1 w-full bg-accent opacity-0" aria-hidden="true"></div>
+
+  <header id="siteHeader" class="sticky top-0 z-50 border-b-2 border-ink bg-paper dark:border-paper dark:bg-ink">
+    <nav class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-4 sm:px-8" aria-label="Main navigation">
+      <a href="#hero" class="font-display text-2xl uppercase tracking-tight">
+        CYBER<span class="accent-text neon-text">HELL</span>
+        <span class="ml-1 font-mono text-[9px] tracking-widest text-muted dark:text-mist">® 001</span>
+      </a>
+      <div class="flex flex-wrap items-center gap-5 text-[10px] font-black uppercase tracking-widest">
+        <a href="#services" class="nav-link">Services</a>
+        <a href="#features" class="nav-link">Gear</a>
+        <a href="#contact" class="nav-link">Contact</a>
+        <button id="themeToggle" type="button" class="brutal-btn !px-3 !py-2" aria-label="Switch to light mode" aria-pressed="true">☾ / ☀</button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+
+    <!-- HERO -->
+    <section id="hero" class="relative mx-auto grid max-w-7xl items-center gap-12 px-5 pb-20 pt-20 sm:px-8 md:grid-cols-[1.15fr_0.85fr] md:py-28">
+      <div class="relative z-10">
+        <div class="hero-copy mb-8 inline-flex items-center gap-3 border-2 border-accent-ink px-4 py-2 dark:border-accent">
+          <span class="glow-dot h-2 w-2 rounded-full bg-accent"></span>
+          <span class="accent-text text-[9px] font-black uppercase tracking-[0.25em]">Independent Hardware Lab // Online</span>
+        </div>
+        <p class="section-label">&gt; SYSTEM BOOT // CYBERHELL V.01</p>
+
+        <h1 class="font-display text-[19vw] uppercase leading-[0.78] tracking-[-0.06em] sm:text-8xl lg:text-[8.5rem]">
+          <span class="hero-line block">Break</span>
+          <span class="hero-line accent-text neon-text block">Limits.</span>
+          <span class="hero-line block">Build</span>
+          <span class="hero-line block">Legends<span class="accent-text">_</span></span>
+        </h1>
+
+        <p class="hero-copy mt-8 max-w-md text-sm font-bold leading-7 text-muted dark:text-mist">
+          Your next-level hardware starts here. Custom gaming rigs, precision upgrades, and computer repairs engineered for performance.
+        </p>
+
+        <div class="hero-copy mt-9 flex flex-wrap gap-4">
+          <a href="#contact" class="brutal-btn">Get a quote <span>↗</span></a>
+          <a href="#features" class="brutal-btn-ghost">Explore hardware <span>↘</span></a>
+          <button id="replayIntro" type="button" class="brutal-btn-ghost">↻ Replay intro</button>
+        </div>
+
+        <div class="hero-copy mt-12 grid max-w-md grid-cols-3 border-y-2 border-ink py-5 dark:border-paper">
+          <div>
+            <p class="accent-text font-display text-3xl">01</p>
+            <p class="mt-1 text-[9px] font-black uppercase tracking-widest text-muted dark:text-mist">Custom builds</p>
+          </div>
+          <div class="border-x-2 border-ink px-4 dark:border-paper">
+            <p class="accent-text font-display text-3xl">02</p>
+            <p class="mt-1 text-[9px] font-black uppercase tracking-widest text-muted dark:text-mist">PC repair</p>
+          </div>
+          <div class="pl-4">
+            <p class="accent-text font-display text-3xl">03</p>
+            <p class="mt-1 text-[9px] font-black uppercase tracking-widest text-muted dark:text-mist">Upgrades</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- TERMINAL -->
+      <div id="heroTerminal" class="relative mx-auto w-full max-w-lg">
+        <div id="sticker" class="absolute -right-2 -top-8 z-20 border-2 border-ink bg-accent p-4 text-ink shadow-[5px_5px_0_var(--color-ink)] dark:border-paper dark:shadow-[5px_5px_0_var(--color-paper)]">
+          <p class="text-[8px] font-black uppercase tracking-widest">Cyberhell lab</p>
+          <p class="font-display text-2xl uppercase">No Limits.</p>
+        </div>
+
+        <div class="relative overflow-hidden border-2 border-ink bg-ink text-paper shadow-[6px_6px_0_var(--color-accent)] dark:border-paper dark:bg-panel">
+          <div class="flex items-center justify-between border-b-2 border-paper/30 px-4 py-3">
+            <div class="flex items-center gap-2">
+              <span class="h-2.5 w-2.5 rounded-full bg-accent"></span>
+              <span class="h-2.5 w-2.5 rounded-full bg-yellow-500"></span>
+              <span class="h-2.5 w-2.5 rounded-full bg-green-500"></span>
+            </div>
+            <p class="text-[9px] font-black uppercase tracking-widest text-mist">CH_TERMINAL.exe</p>
+            <span class="text-[9px] text-accent">LIVE</span>
+          </div>
+
+          <div class="relative min-h-[330px] overflow-hidden p-6">
+            <div class="terminal-scan pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-transparent via-accent/5 to-transparent"></div>
+            <p class="text-xs text-mist">CYBERHELL BIOS [Version 01.26]</p>
+            <p class="mt-2 text-xs text-mist">Copyright (C) CyberHell Hardware Lab</p>
+            <div class="my-6 h-px bg-paper/20"></div>
+            <div class="space-y-3 text-xs leading-relaxed">
+              <p class="text-accent">root@cyberhell:~$ ./initialize.sh</p>
+              <p class="text-green-400">[OK] Hardware interface loaded</p>
+              <p class="text-green-400">[OK] Performance modules online</p>
+              <p class="text-green-400">[OK] Gaming protocols initialized</p>
+              <p class="text-yellow-400">[SYS] Waiting for your next build...</p>
+              <pre id="terminalOutput" class="mt-4 min-h-[9rem] whitespace-pre-wrap break-words font-mono text-xs text-accent"></pre>
+              <p class="mt-5">root@cyberhell:~$ <span class="animate-pulse text-accent">█</span></p>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between border-t-2 border-paper/30 px-5 py-3">
+            <p class="text-[8px] font-black uppercase tracking-widest text-mist">Secure connection established</p>
+            <p class="text-[8px] font-black uppercase tracking-widest text-accent">SYS // 001</p>
+          </div>
+        </div>
+
+        <p class="mt-5 text-center text-[9px] uppercase tracking-[0.3em] text-muted dark:text-mist">Hardware for the next generation</p>
+      </div>
+    </section>
+
+    <!-- TICKER -->
+    <div class="overflow-hidden border-y-2 border-ink bg-accent py-4 text-ink dark:border-paper" aria-label="Our products and services">
+      <div id="tickerTrack" class="flex w-max font-display text-2xl uppercase tracking-wide" aria-hidden="true">
+        <span class="whitespace-nowrap px-4">Gaming PCs ✳ Custom Builds ✳ GPU Upgrades ✳ Hardware Repair ✳ RGB Gear ✳ Performance ✳</span>
+        <span class="whitespace-nowrap px-4">Gaming PCs ✳ Custom Builds ✳ GPU Upgrades ✳ Hardware Repair ✳ RGB Gear ✳ Performance ✳</span>
+      </div>
+    </div>
+
+    <!-- SERVICES -->
+    <section id="services" class="reveal mx-auto max-w-7xl scroll-mt-24 px-5 py-24 sm:px-8">
+      <p class="section-label">// 01 — Our operations</p>
+      <h2 class="section-title">We fix.<br><span class="accent-text neon-text">We build.</span><br>We upgrade.</h2>
+      <p class="mb-12 max-w-xl text-sm font-bold leading-7 text-muted dark:text-mist">
+        From custom gaming rigs to hardware troubleshooting, CyberHell transforms your setup into a machine built for your ambitions.
+      </p>
+
+      <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <article class="brutal-card">
+          <div class="mb-8 flex items-start justify-between">
+            <span class="accent-text font-display text-5xl">01</span>
+            <span class="text-4xl" aria-hidden="true">▣</span>
+          </div>
+          <p class="section-label">Build protocol</p>
+          <h3 class="font-display text-3xl uppercase">Custom PCs</h3>
+          <p class="body-copy mt-4">Custom configurations for competitive gaming, content creation, streaming, and productivity.</p>
+          <a href="#contact" class="accent-text mt-7 inline-block text-xs font-black uppercase underline underline-offset-4">Start a build ↗</a>
+        </article>
+
+        <article class="brutal-card">
+          <div class="mb-8 flex items-start justify-between">
+            <span class="accent-text font-display text-5xl">02</span>
+            <span class="text-4xl" aria-hidden="true">⚙</span>
+          </div>
+          <p class="section-label">Diagnostic protocol</p>
+          <h3 class="font-display text-3xl uppercase">PC Repair</h3>
+          <p class="body-copy mt-4">Troubleshooting, system diagnostics, hardware problems, and practical repair solutions.</p>
+          <a href="#contact" class="accent-text mt-7 inline-block text-xs font-black uppercase underline underline-offset-4">Request repair ↗</a>
+        </article>
+
+        <article class="brutal-card">
+          <div class="mb-8 flex items-start justify-between">
+            <span class="accent-text font-display text-5xl">03</span>
+            <span class="text-4xl" aria-hidden="true">⌁</span>
+          </div>
+          <p class="section-label">Performance protocol</p>
+          <h3 class="font-display text-3xl uppercase">Upgrades</h3>
+          <p class="body-copy mt-4">Improve speed, storage, graphics performance, cooling, and overall system capability.</p>
+          <a href="#contact" class="accent-text mt-7 inline-block text-xs font-black uppercase underline underline-offset-4">Boost performance ↗</a>
+        </article>
+
+        <article class="brutal-card">
+          <div class="mb-8 flex items-start justify-between">
+            <span class="accent-text font-display text-5xl">04</span>
+            <span class="text-4xl" aria-hidden="true">⌘</span>
+          </div>
+          <p class="section-label">Software protocol</p>
+          <h3 class="font-display text-3xl uppercase">System Setup</h3>
+          <p class="body-copy mt-4">Operating system installation, drivers, software, and initial system configuration.</p>
+          <a href="#contact" class="accent-text mt-7 inline-block text-xs font-black uppercase underline underline-offset-4">Configure system ↗</a>
+        </article>
+
+        <article class="brutal-card">
+          <div class="mb-8 flex items-start justify-between">
+            <span class="accent-text font-display text-5xl">05</span>
+            <span class="text-4xl" aria-hidden="true">◈</span>
+          </div>
+          <p class="section-label">Hardware protocol</p>
+          <h3 class="font-display text-3xl uppercase">Parts &amp; Gear</h3>
+          <p class="body-copy mt-4">Find compatible processors, graphics cards, memory, peripherals, and essential accessories.</p>
+          <a href="#contact" class="accent-text mt-7 inline-block text-xs font-black uppercase underline underline-offset-4">Find components ↗</a>
+        </article>
+
+        <article class="brutal-card">
+          <div class="mb-8 flex items-start justify-between">
+            <span class="accent-text font-display text-5xl">06</span>
+            <span class="text-4xl" aria-hidden="true">⟳</span>
+          </div>
+          <p class="section-label">Maintenance protocol</p>
+          <h3 class="font-display text-3xl uppercase">PC Maintenance</h3>
+          <p class="body-copy mt-4">Routine cleaning, cooling checks, and upkeep to keep your hardware running smoothly.</p>
+          <a href="#contact" class="accent-text mt-7 inline-block text-xs font-black uppercase underline underline-offset-4">Maintain setup ↗</a>
+        </article>
+      </div>
+    </section>
+
+    <!-- FEATURED GEAR -->
+    <section id="features" class="reveal mx-auto max-w-7xl scroll-mt-24 px-5 py-20 sm:px-8">
+      <p class="section-label">// 02 — Hardware archive</p>
+      <div class="mb-12 flex flex-wrap items-end justify-between gap-6">
+        <h2 class="section-title !mb-0">Choose your<br><span class="accent-text neon-text">weapon.</span></h2>
+        <p class="body-copy max-w-xs">Three categories. Endless possibilities. Find the hardware that fits your mission.</p>
+      </div>
+
+      <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+
+        <article class="brutal-card group overflow-hidden !p-0">
+          <div class="relative flex h-64 items-center justify-center overflow-hidden border-b-2 border-ink bg-ink dark:border-paper">
+            <div class="hero-grid absolute inset-0 opacity-60"></div>
+            <svg viewBox="0 0 200 170" class="relative z-10 h-44 w-44 transition-transform duration-500 group-hover:scale-110" role="img" aria-label="Stylized gaming computer tower">
+              <path d="M50 15 L139 15 L158 30 L158 145 L50 145 Z" fill="#24110D" stroke="#FF541E" stroke-width="3"/>
+              <path d="M139 15 L158 30 L158 145 L139 132 Z" fill="#120907" stroke="#FF541E" stroke-width="2"/>
+              <rect x="62" y="30" width="65" height="102" rx="2" fill="#100604" stroke="#6C3323" stroke-width="2"/>
+              <circle cx="94" cy="60" r="20" fill="none" stroke="#FF541E" stroke-width="3"/>
+              <circle cx="94" cy="60" r="11" fill="none" stroke="#FF7A36" stroke-width="2"/>
+              <circle cx="94" cy="60" r="4" fill="#FF541E"/>
+              <circle cx="94" cy="103" r="20" fill="none" stroke="#FF541E" stroke-width="3"/>
+              <circle cx="94" cy="103" r="11" fill="none" stroke="#FF7A36" stroke-width="2"/>
+              <circle cx="94" cy="103" r="4" fill="#FF541E"/>
+              <path d="M143 42 L150 46 M143 53 L150 57" stroke="#FF541E" stroke-width="3"/>
+              <path d="M44 148 L166 148" stroke="#FF541E" stroke-width="3"/>
+            </svg>
+            <span class="absolute left-4 top-4 border border-accent px-2 py-1 text-[9px] font-black uppercase tracking-widest text-accent">Category 001</span>
+          </div>
+          <div class="p-6">
+            <p class="section-label">Performance systems</p>
+            <h3 class="font-display text-4xl uppercase">Gaming PCs</h3>
+            <p class="body-copy mt-3">Purpose-built desktops for gaming, streaming, creative work, and demanding applications.</p>
+            <a href="#contact" data-interest-link="a gaming PC" class="brutal-btn mt-6 w-full">Configure your rig ↗</a>
+          </div>
+        </article>
+
+        <article class="brutal-card group overflow-hidden !p-0">
+          <div class="relative flex h-64 items-center justify-center overflow-hidden border-b-2 border-ink bg-ink dark:border-paper">
+            <div class="hero-grid absolute inset-0 opacity-60"></div>
+            <svg viewBox="0 0 200 170" class="relative z-10 h-44 w-44 transition-transform duration-500 group-hover:rotate-6" role="img" aria-label="Stylized graphics card">
+              <path d="M20 50 L157 50 L180 72 L180 110 L157 126 L20 126 Z" fill="#24110D" stroke="#FF541E" stroke-width="3"/>
+              <rect x="30" y="60" width="120" height="55" fill="#100604" stroke="#74331E" stroke-width="2"/>
+              <circle cx="63" cy="88" r="21" fill="#180B08" stroke="#FF7A36" stroke-width="3"/>
+              <circle cx="63" cy="88" r="9" fill="none" stroke="#FF541E" stroke-width="3"/>
+              <circle cx="115" cy="88" r="21" fill="#180B08" stroke="#FF7A36" stroke-width="3"/>
+              <circle cx="115" cy="88" r="9" fill="none" stroke="#FF541E" stroke-width="3"/>
+              <path d="M30 126 L30 139 L62 139 L62 126 M145 126 L145 139 L168 139 L168 119" fill="#D9A77C" stroke="#FF541E" stroke-width="2"/>
+              <path d="M20 70 L8 70 L8 110 L20 110" fill="none" stroke="#FF541E" stroke-width="3"/>
+            </svg>
+            <span class="absolute left-4 top-4 border border-accent px-2 py-1 text-[9px] font-black uppercase tracking-widest text-accent">Category 002</span>
+          </div>
+          <div class="p-6">
+            <p class="section-label">Internal hardware</p>
+            <h3 class="font-display text-4xl uppercase">PC Components</h3>
+            <p class="body-copy mt-3">Processors, graphics cards, RAM, storage, motherboards, cooling, and upgrade parts.</p>
+            <a href="#contact" data-interest-link="PC components" class="brutal-btn-ghost mt-6 w-full">Find components ↗</a>
+          </div>
+        </article>
+
+        <article class="brutal-card group overflow-hidden !p-0">
+          <div class="relative flex h-64 items-center justify-center overflow-hidden border-b-2 border-ink bg-ink dark:border-paper">
+            <div class="hero-grid absolute inset-0 opacity-60"></div>
+            <span class="neon-text relative z-10 font-display text-8xl text-accent transition-transform duration-500 group-hover:scale-110" aria-hidden="true">⌘</span>
+            <span class="absolute left-4 top-4 border border-accent px-2 py-1 text-[9px] font-black uppercase tracking-widest text-accent">Category 003</span>
+          </div>
+          <div class="p-6">
+            <p class="section-label">Peripherals</p>
+            <h3 class="font-display text-4xl uppercase">Gaming Gear</h3>
+            <p class="body-copy mt-3">Keyboards, mice, headsets, monitors, and RGB accessories.</p>
+            <a href="#contact" data-interest-link="gaming gear" class="brutal-btn-ghost mt-6 w-full">Shop gear ↗</a>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact" class="reveal mx-auto max-w-6xl scroll-mt-24 px-5 pb-24 pt-16 sm:px-8">
+      <div class="brutal-card grid gap-10 p-6 sm:p-10 md:grid-cols-2">
+        <div>
+          <p class="section-label">03 // Get in touch</p>
+          <h2 class="font-display text-6xl uppercase leading-[0.88] sm:text-7xl lg:text-8xl">Let's<br>build<br><span class="accent-text">something.</span></h2>
+          <p class="mt-6 text-sm font-bold leading-relaxed text-muted dark:text-mist">
+            Need a new gaming rig, an upgrade, or help fixing your computer? Tell us what you need and we'll discuss the next steps.
+          </p>
+        </div>
+
+        <form id="contactForm" class="space-y-5">
+          <div>
+            <p class="mb-2 text-xs font-black uppercase">I'm interested in</p>
+            <div id="interestChips" class="flex flex-wrap gap-2">
+              <button type="button" class="chip" aria-pressed="false" data-interest="a gaming PC">Gaming PC</button>
+              <button type="button" class="chip" aria-pressed="false" data-interest="PC components">Parts</button>
+              <button type="button" class="chip" aria-pressed="false" data-interest="gaming gear">Gear</button>
+              <button type="button" class="chip" aria-pressed="false" data-interest="a repair">Repair</button>
+              <button type="button" class="chip" aria-pressed="false" data-interest="an upgrade">Upgrade</button>
+            </div>
+          </div>
+          <div>
+            <label for="contactName" class="mb-2 block text-xs font-black uppercase">Your name *</label>
+            <input id="contactName" name="name" type="text" class="brutal-field" autocomplete="name" required maxlength="100" placeholder="Player One">
+          </div>
+          <div>
+            <label for="contactEmail" class="mb-2 block text-xs font-black uppercase">Your email *</label>
+            <input id="contactEmail" name="email" type="email" class="brutal-field" autocomplete="email" required maxlength="254" placeholder="you@example.com">
+          </div>
+          <div>
+            <label for="contactMessage" class="mb-2 block text-xs font-black uppercase">What do you need? *</label>
+            <textarea id="contactMessage" name="message" class="brutal-field" rows="4" required maxlength="5000" placeholder="Tell us about your PC or service needs"></textarea>
+          </div>
+          <button type="submit" class="brutal-btn w-full">Send inquiry ↗</button>
+          <p id="formStatus" class="text-sm font-bold" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="border-t-2 border-ink dark:border-paper">
+    <div class="mx-auto flex max-w-6xl flex-col items-start justify-between gap-4 px-5 py-8 sm:flex-row sm:items-center sm:px-8">
+      <a href="#hero" class="font-display text-3xl uppercase">Cyber<span class="accent-text">Hell</span></a>
+      <p class="text-xs font-black uppercase">Built for performance © <span id="currentYear"></span></p>
+      <a href="#hero" class="nav-link text-xs font-black uppercase underline decoration-2 underline-offset-4">Back to top ↑</a>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
